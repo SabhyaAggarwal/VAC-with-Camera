@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice & Video Echo Virtual Audio Cable</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the Inter font and overall layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 600px; /* Increased max-width to accommodate video */
+            width: 100%;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .message-box {
+            background-color: #e2e8f0;
+            color: #2d3748;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-align: left;
+            word-wrap: break-word; /* Ensure long messages wrap */
+            width: 100%; /* Make message box full width of container */
+        }
+        .error-message {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        .success-message {
+            background-color: #d1fae5;
+            color: #047857;
+        }
+        video {
+            width: 100%;
+            max-width: 480px; /* Max width for video to keep it from being too large */
+            height: auto;
+            border-radius: 8px;
+            background-color: #000; /* Black background for video placeholder */
+            margin-bottom: 20px;
+            display: none; /* Hidden by default until stream is active */
+        }
+        video.active {
+            display: block; /* Show when stream is active */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Voice & Video Echo Virtual Audio Cable</h1>
+        <p class="text-gray-600 mb-6">Click the button below to start echoing your microphone input and displaying your camera feed.</p>
+
+        <video id="videoFeed" autoplay playsinline></video>
+
+        <button id="toggleEchoButton"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Start Echo
+        </button>
+
+        <div id="messageBox" class="message-box mt-6 hidden"></div>
+    </div>
+
+    <script>
+        let audioContext;
+        let mediaStream; // Combined audio and video stream
+        let isEchoing = false;
+        const toggleEchoButton = document.getElementById('toggleEchoButton');
+        const messageBox = document.getElementById('messageBox');
+        const videoFeed = document.getElementById('videoFeed');
+
+        // Function to display messages to the user
+        function displayMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'error-message', 'success-message');
+            if (type === 'error') {
+                messageBox.classList.add('error-message');
+            } else if (type === 'success') {
+                messageBox.classList.add('success-message');
+            } else {
+                // Default info styling
+                messageBox.classList.remove('error-message', 'success-message');
+            }
+        }
+
+        // Function to clear messages (not used directly in this version but good practice)
+        function clearMessage() {
+            messageBox.classList.add('hidden');
+            messageBox.textContent = '';
+        }
+
+        // Function to start the audio and video echo
+        async function startEcho() {
+            try {
+                // Request access to both microphone and camera
+                displayMessage('Requesting microphone and camera access...', 'info');
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+
+                // Display video feed
+                videoFeed.srcObject = mediaStream;
+                videoFeed.classList.add('active'); // Show video element
+
+                // Create a new AudioContext if one doesn't exist
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                // Create an audio source from the microphone stream (from the combined mediaStream)
+                const microphoneSource = audioContext.createMediaStreamSource(mediaStream);
+
+                // Connect the microphone source directly to the audio context's destination (speakers)
+                microphoneSource.connect(audioContext.destination);
+
+                isEchoing = true;
+                toggleEchoButton.textContent = 'Stop Echo';
+                toggleEchoButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                toggleEchoButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                displayMessage('Voice echo and video feed started. Speak into your microphone!', 'success');
+
+            } catch (error) {
+                console.error('Error accessing microphone or camera:', error);
+                displayMessage(`Error: Could not start. Please ensure microphone and camera access are granted. Details: ${error.name || error.message}`, 'error');
+                // Reset button state if an error occurs
+                toggleEchoButton.textContent = 'Start Echo';
+                toggleEchoButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                toggleEchoButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                isEchoing = false;
+                videoFeed.classList.remove('active'); // Hide video element on error
+                videoFeed.srcObject = null;
+            }
+        }
+
+        // Function to stop the audio and video echo
+        function stopEcho() {
+            if (mediaStream) {
+                // Stop all tracks (audio and video) in the media stream
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            // Clear video feed
+            videoFeed.srcObject = null;
+            videoFeed.classList.remove('active'); // Hide video element
+
+            if (audioContext && audioContext.state !== 'closed') {
+                // Close the audio context
+                audioContext.close().then(() => {
+                    audioContext = null;
+                    console.log('AudioContext closed.');
+                });
+            }
+
+            isEchoing = false;
+            toggleEchoButton.textContent = 'Start Echo';
+            toggleEchoButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+            toggleEchoButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            displayMessage('Voice echo and video feed stopped.', 'info');
+        }
+
+        // Event listener for the toggle button
+        toggleEchoButton.addEventListener('click', () => {
+            if (isEchoing) {
+                stopEcho();
+            } else {
+                startEcho();
+            }
+        });
+
+        // Initial message when the page loads
+        window.onload = () => {
+            displayMessage('Click "Start Echo" to begin. You may be prompted to allow microphone and camera access.', 'info');
+        };
+    </script>
+</body>
+</html>
