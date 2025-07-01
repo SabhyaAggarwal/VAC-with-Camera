@@ -152,7 +152,7 @@
                 console.error('Error accessing microphone or camera:', error);
                 displayMessage(`Error: Could not start. Please ensure microphone and camera access are granted. Details: ${error.name || error.message}`, 'error');
                 // Reset button state if an error occurs
-                toggleEchoButton.textContent = 'Start Echo';
+                toggleEchoButton.textContent = 'Connect the cable';
                 toggleEchoButton.classList.remove('bg-red-600', 'hover:bg-red-700');
                 toggleEchoButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 isEchoing = false;
@@ -181,7 +181,7 @@
             }
 
             isEchoing = false;
-            toggleEchoButton.textContent = 'Start Echo';
+            toggleEchoButton.textContent = 'Connect the cable';
             toggleEchoButton.classList.remove('bg-red-600', 'hover:bg-red-700');
             toggleEchoButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
             displayMessage('Voice echo and video feed stopped.', 'info');
