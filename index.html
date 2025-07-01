@@ -79,12 +79,12 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Virtual Audio Cable with Canera</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Virtual Audio Cable with Camera</h1>
         <p class="text-gray-600 mb-6">Click the button below to connect the virtual audio cable displaying your camera feed.</p>
 
         <video id="videoFeed" autoplay playsinline></video>
 
-        <button id="toggleEchoButton"
+        <button id="toggleCableButton"
                 class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
             Connect the cable
         </button>
@@ -95,8 +95,8 @@
     <script>
         let audioContext;
         let mediaStream; // Combined audio and video stream
-        let isEchoing = false;
-        const toggleEchoButton = document.getElementById('toggleEchoButton');
+        let isCableConnected = false;
+        const toggleCableButton = document.getElementById('toggleCableButton');
         const messageBox = document.getElementById('messageBox');
         const videoFeed = document.getElementById('videoFeed');
 
@@ -120,8 +120,8 @@
             messageBox.textContent = '';
         }
 
-        // Function to start the audio and video echo
-        async function startEcho() {
+        // Function to connect the cable (start audio and video)
+        async function connectCable() {
             try {
                 // Request access to both microphone and camera
                 displayMessage('Requesting microphone and camera access...', 'info');
@@ -142,27 +142,27 @@
                 // Connect the microphone source directly to the audio context's destination (speakers)
                 microphoneSource.connect(audioContext.destination);
 
-                isEchoing = true;
-                toggleEchoButton.textContent = 'Stop Echo';
-                toggleEchoButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                toggleEchoButton.classList.add('bg-red-600', 'hover:bg-red-700');
-                displayMessage('Voice echo and video feed started. Speak into your microphone!', 'success');
+                isCableConnected = true;
+                toggleCableButton.textContent = 'Disconnect the cable';
+                toggleCableButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                toggleCableButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                displayMessage('Cable connected. Speak into your microphone!', 'success');
 
             } catch (error) {
                 console.error('Error accessing microphone or camera:', error);
-                displayMessage(`Error: Could not start. Please ensure microphone and camera access are granted. Details: ${error.name || error.message}`, 'error');
+                displayMessage(`Error: Could not connect the cable. Please ensure microphone and camera access are granted. Details: ${error.name || error.message}`, 'error');
                 // Reset button state if an error occurs
-                toggleEchoButton.textContent = 'Connect the cable';
-                toggleEchoButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-                toggleEchoButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                isEchoing = false;
+                toggleCableButton.textContent = 'Connect the cable';
+                toggleCableButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                toggleCableButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                isCableConnected = false;
                 videoFeed.classList.remove('active'); // Hide video element on error
                 videoFeed.srcObject = null;
             }
         }
 
-        // Function to stop the audio and video echo
-        function stopEcho() {
+        // Function to disconnect the cable (stop audio and video)
+        function disconnectCable() {
             if (mediaStream) {
                 // Stop all tracks (audio and video) in the media stream
                 mediaStream.getTracks().forEach(track => track.stop());
@@ -180,19 +180,19 @@
                 });
             }
 
-            isEchoing = false;
-            toggleEchoButton.textContent = 'Connect the cable';
-            toggleEchoButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-            toggleEchoButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            displayMessage('Voice echo and video feed stopped.', 'info');
+            isCableConnected = false;
+            toggleCableButton.textContent = 'Connect the cable';
+            toggleCableButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+            toggleCableButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            displayMessage('Cable disconnected.', 'info');
         }
 
         // Event listener for the toggle button
-        toggleEchoButton.addEventListener('click', () => {
-            if (isEchoing) {
-                stopEcho();
+        toggleCableButton.addEventListener('click', () => {
+            if (isCableConnected) {
+                disconnectCable();
             } else {
-                startEcho();
+                connectCable();
             }
         });
 
