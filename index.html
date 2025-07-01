@@ -79,14 +79,14 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Voice & Video Echo Virtual Audio Cable</h1>
-        <p class="text-gray-600 mb-6">Click the button below to start echoing your microphone input and displaying your camera feed.</p>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Virtual Audio Cable with Canera</h1>
+        <p class="text-gray-600 mb-6">Click the button below to connect the virtual audio cable displaying your camera feed.</p>
 
         <video id="videoFeed" autoplay playsinline></video>
 
         <button id="toggleEchoButton"
                 class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-            Start Echo
+            Connect the cable
         </button>
 
         <div id="messageBox" class="message-box mt-6 hidden"></div>
@@ -198,7 +198,7 @@
 
         // Initial message when the page loads
         window.onload = () => {
-            displayMessage('Click "Start Echo" to begin. You may be prompted to allow microphone and camera access.', 'info');
+            displayMessage('Click "Connect the cable" to begin. You may be prompted to allow microphone and camera access.', 'info');
         };
     </script>
 </body>
